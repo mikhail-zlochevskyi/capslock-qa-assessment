@@ -61,6 +61,10 @@ export class FormPage {
   readonly emailInput: Locator;
   readonly phoneInput: Locator;
 
+  // ── Step 3 disqualification error ────────────────────────────────────────
+  /** Element whose data-error-text attribute holds the disqualification copy. */
+  readonly step3DisqualError: Locator;
+
   // ── Progress ─────────────────────────────────────────────────────────────
   readonly stepCurrentIndicator: Locator;
 
@@ -89,6 +93,7 @@ export class FormPage {
     this.emailInput          = this.step4.locator('input[type="email"]');
     this.phoneInput          = this.step5.locator('input[name="phone"]');
 
+    this.step3DisqualError    = this.step3.locator('[data-error-text]').first();
     this.stepCurrentIndicator = page.locator('[data-form-progress-current-step]').first();
   }
 

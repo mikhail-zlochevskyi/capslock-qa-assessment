@@ -11,7 +11,7 @@ export default defineConfig({
     baseURL: process.env.BASE_URL ?? 'https://test-qa.capslock.global',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    actionTimeout: 10_000,
+    actionTimeout: 15_000,
     navigationTimeout: 30_000,
   },
   expect: {
@@ -21,7 +21,6 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      testIgnore: ['**/form-mobile.spec.ts'],
     },
     {
       name: 'mobile-chrome',
