@@ -10,18 +10,25 @@ Playwright-based end-to-end tests for the multi-step lead-gen form at [test-qa.c
 # 1. Install dependencies
 npm install
 
-# 2. Install Playwright browser (Chromium)
+# 2. Install Playwright browsers
 npx playwright install chromium
 
-# 3. Run all tests (headless)
+# 3. Run all tests (desktop + mobile, headless)
 npm test
-# or
-npx playwright test
 
-# 4. Run with browser visible (for debugging)
+# 4. Run desktop suite only (chromium project)
+npm run test:desktop
+
+# 5. Run mobile suite only (iPhone 14 Pro Max project)
+npm run test:mobile
+
+# 6. Run with browser visible (for debugging)
 npm run test:headed
 
-# 5. View the HTML report after a test run
+# 7. Interactive UI mode
+npm run test:ui
+
+# 8. View the HTML report after a test run
 npm run test:report
 ```
 
