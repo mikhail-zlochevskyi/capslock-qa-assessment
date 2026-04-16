@@ -4,9 +4,6 @@ import { test } from './fixtures';
 // ---------------------------------------------------------------------------
 // Mobile layout tests — iPhone 14 Pro Max (430 × 932)
 //
-// ❌ DEFECT: At 430 px viewport width, form elements overlap or get clipped.
-// ❌ DEFECT: "Estimate Your Cost" CTA button is unresponsive on mobile.
-//
 // Run only on the mobile-chrome project (playwright.config.ts).
 // Nested describe + beforeEach eliminates repeated step-navigation setup.
 // ---------------------------------------------------------------------------
@@ -22,7 +19,8 @@ async function assertNoOverflow(page: Page, label: string): Promise<void> {
 test.describe('Mobile layout — form fits within 430 px viewport', () => {
 
   // ── CTA button ─────────────────────────────────────────────────────────────
-  // ❌ DEFECT: unresponsive — clicking does not scroll/activate the form.
+  // ❌ DEFECT: clicking the button produces no response — the form does not
+  //    scroll into view or activate on mobile (430 px viewport).
   test('"Estimate Your Cost" CTA button activates the form on mobile [DEFECT]', async ({ form, page }) => {
     const ctaBtn  = page.locator('a, button').filter({ hasText: /estimate your cost/i }).first();
     const zipInput = page.locator('[data-zip-code-input]').first();
@@ -30,7 +28,6 @@ test.describe('Mobile layout — form fits within 430 px viewport', () => {
     await expect(ctaBtn, '"Estimate Your Cost" button not found').toBeVisible();
     await ctaBtn.click();
 
-    // Expected: ZIP input scrolls into view. Actual (defect): nothing happens.
     await expect(zipInput, 'ZIP input not in viewport after CTA click — button is unresponsive').toBeInViewport();
   });
 
@@ -89,6 +86,7 @@ test.describe('Mobile layout — form fits within 430 px viewport', () => {
       await expect(form.step2).toBeVisible();
     });
 
+    // ❌ DEFECT: at 430 px, interest option cards overflow the viewport width.
     test('step 2: interest option cards do not overflow viewport', async ({ form, page }) => {
       const vw       = page.viewportSize()!.width;
       const checkboxes = form.interestCheckboxes;
@@ -113,6 +111,7 @@ test.describe('Mobile layout — form fits within 430 px viewport', () => {
         await form.selectInterests(testData.form.interests);
       });
 
+      // ❌ DEFECT: at 430 px, property type cards overflow the viewport width.
       test('step 3: property type cards do not overflow viewport', async ({ form, page }) => {
         const vw    = page.viewportSize()!.width;
         const radios = form.propertyRadios;
@@ -137,6 +136,7 @@ test.describe('Mobile layout — form fits within 430 px viewport', () => {
           await form.selectPropertyType(testData.form.propertyType);
         });
 
+        // ❌ DEFECT: at 430 px, Name and Email inputs overflow the viewport width.
         test('step 4: Name and Email inputs do not overflow viewport', async ({ form, page }) => {
           const vw      = page.viewportSize()!.width;
           const nameBox = await form.nameInput.boundingBox();
@@ -158,6 +158,7 @@ test.describe('Mobile layout — form fits within 430 px viewport', () => {
             await form.fillContactInfo(testData.form.name, testData.form.email);
           });
 
+          // ❌ DEFECT: at 430 px, Phone input and Submit button overflow the viewport width.
           test('step 5: Phone input and Submit button do not overflow viewport', async ({ form, page }) => {
             const vw       = page.viewportSize()!.width;
             const phoneBox = await form.phoneInput.boundingBox();
