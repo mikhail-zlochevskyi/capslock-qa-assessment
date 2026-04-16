@@ -49,6 +49,31 @@ test.describe('From home page', () => {
     await expect(form.step2).not.toBeVisible();
   });
 
+  // ── 2b. Out-of-area ZIP — progress indicator ─────────────────────────────
+  // ❌ DEFECT: progress counter renders "1 of null" on the sorry screen —
+  //    the total step count is undefined in the out-of-area flow.
+  test('out-of-area ZIP: progress indicator shows valid step count [DEFECT]', async ({ form, page }) => {
+    await form.fillZip('11111');
+    await form.waitForZipResult();
+
+    await expect(form.stepSorry).toBeVisible();
+
+    // The total-steps element must exist and contain a real number, not "null"
+    // or an empty string.
+    const totalIndicator = page.locator('[data-form-progress-total-steps]').first();
+    const totalText = await totalIndicator.textContent();
+
+    // Should be a numeric string (e.g. "1" or "5"), never empty or "null"
+    expect(
+      totalText,
+      `Progress total shows "${totalText}" — expected a numeric value`,
+    ).toMatch(/^\d+$/);
+
+    // The combined progress text must not contain the word "null"
+    const progressText = await page.locator('[data-form-progress-current-step]').first().textContent();
+    expect(progressText ?? '', 'Progress current step is null/empty').toMatch(/^\d+$/);
+  });
+
   // ── 3. ZIP format validation ─────────────────────────────────────────────
   test.describe('ZIP code format validation', () => {
 

@@ -59,6 +59,7 @@ Out-of-area ZIP (e.g. 11111) → `.step-sorry` screen.
 | 7 | Progress counter advances through all 5 steps | 🟡 Medium | ❌ **Defect** |
 | 8 | Rental/Mobile Home shows disqualification error | 🟡 Medium | ❌ **Defect** |
 | 9 | "Estimate Your Cost" CTA button scrolls to / opens form on mobile | 🔴 Critical | ❌ **Defect** |
+| 10 | Out-of-area ZIP: progress indicator shows valid step count (not null) | 🟡 Medium | ❌ **Defect** |
 
 ---
 
@@ -103,6 +104,13 @@ The callback system needs a valid US phone number. A phone with fewer than 10 di
 **Expected:** Per `data-error-text` on the form element ("Unfortunately, we don't install walk-in tubs in rental and mobile homes"), selecting "Rental Property" or "Mobile Home" should show an error and block progression to step 4.  
 **Actual:** Selecting "Rental Property" and clicking Next advances to step 4 without any error message.  
 **Severity:** Medium — disqualified leads reach the contact/phone capture steps, wasting sales team time.
+
+---
+
+### Defect 6 — Out-of-area ZIP shows broken progress indicator ("1 of null")
+**Expected:** When an out-of-area ZIP (e.g. 11111) is submitted, the progress indicator should either be hidden or display a meaningful value (e.g. "1 of 1" or no counter at all) on the sorry/unavailability screen.  
+**Actual:** The progress bar renders with "1 of" followed by nothing (the total step count is `null`/undefined), producing malformed text and a broken progress bar UI.  
+**Severity:** Medium/UX — the sorry screen is a dead-end for out-of-area users; the broken counter adds visual noise and may undermine trust, but no lead data is lost.
 
 ---
 
