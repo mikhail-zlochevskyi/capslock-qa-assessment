@@ -213,7 +213,35 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
   });
 });
 
-// ── Group 3: Progress indicator ───────────────────────────────────────────
+// ── Group 3: Video player play/pause toggle ───────────────────────────────
+test.describe('Video player play/pause toggle', () => {
+
+  test('clicking play toggles <i> from lavin-play → lavin-pause → lavin-play', async ({ form, page }) => {
+    const playBtn = page.locator('button.play').first();
+
+    // Scroll the button into view so it is actionable
+    await playBtn.scrollIntoViewIfNeeded();
+    await expect(playBtn).toBeVisible();
+
+    const icon = playBtn.locator('i').first();
+
+    // ── Initial state: play icon ────────────────────────────────────────────
+    await expect(icon).toHaveClass(/lavin-play/);
+    await expect(icon).not.toHaveClass(/lavin-pause/);
+
+    // ── Click once → pause icon ─────────────────────────────────────────────
+    await playBtn.click();
+    await expect(icon).toHaveClass(/lavin-pause/);
+    await expect(icon).not.toHaveClass(/lavin-play/);
+
+    // ── Click again → back to play icon ─────────────────────────────────────
+    await playBtn.click();
+    await expect(icon).toHaveClass(/lavin-play/);
+    await expect(icon).not.toHaveClass(/lavin-pause/);
+  });
+});
+
+// ── Group 4: Progress indicator ───────────────────────────────────────────
 test.describe('Progress counter', () => {
 
   // ❌ DEFECT: counter skips step 3 — shows "2 → 2 → 4", never "3"
