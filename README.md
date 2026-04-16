@@ -58,6 +58,7 @@ Out-of-area ZIP (e.g. 11111) → `.step-sorry` screen.
 | 6 | Invalid email format triggers HTML5 validation | 🟡 Medium | ✅ Pass |
 | 7 | Progress counter advances through all 5 steps | 🟡 Medium | ❌ **Defect** |
 | 8 | Rental/Mobile Home shows disqualification error | 🟡 Medium | ❌ **Defect** |
+| 9 | "Estimate Your Cost" CTA button scrolls to / opens form on mobile | 🔴 Critical | ❌ **Defect** |
 
 ---
 
@@ -102,6 +103,20 @@ The callback system needs a valid US phone number. A phone with fewer than 10 di
 **Expected:** Per `data-error-text` on the form element ("Unfortunately, we don't install walk-in tubs in rental and mobile homes"), selecting "Rental Property" or "Mobile Home" should show an error and block progression to step 4.  
 **Actual:** Selecting "Rental Property" and clicking Next advances to step 4 without any error message.  
 **Severity:** Medium — disqualified leads reach the contact/phone capture steps, wasting sales team time.
+
+---
+
+### Defect 5 — "Estimate Your Cost" CTA button is unresponsive on mobile (430 px)
+**Expected:** Clicking the "Estimate Your Cost →" button in the page body (below reviews section) should scroll to or activate the multi-step form, allowing mobile users to start filling it.  
+**Actual:** On iPhone 14 Pro Max (430 px viewport), clicking the button produces no visible response — the form does not appear and the page does not scroll.  
+**Severity:** Critical — this is the primary CTA for mobile users coming from organic/ad traffic. If the button is broken, mobile visitors cannot enter the funnel at all, resulting in complete conversion loss on mobile.
+
+---
+
+### Defect 4 — Mobile layout overlap / clipping at 430 px viewport (form-mobile tests)
+**Expected:** At iPhone 14 Pro Max width (430 px), all form elements (inputs, labels, buttons) fit within the viewport without horizontal overflow or clipping.  
+**Actual:** At 430 px, form elements overflow or get clipped — `document.documentElement.scrollWidth` exceeds `window.innerWidth` and/or element bounding boxes extend past the right edge of the viewport.  
+**Severity:** High — the form is unusable on the most common iPhone size, directly blocking lead capture from mobile users.
 
 ---
 
