@@ -120,8 +120,8 @@ export class FormPage {
    */
   async waitForZipResult(): Promise<void> {
     await Promise.race([
-      this.step2.waitFor({ state: 'visible', timeout: 15_000 }),
-      this.stepSorry.waitFor({ state: 'visible', timeout: 15_000 }),
+      this.step2.waitFor({ state: 'visible' }),
+      this.stepSorry.waitFor({ state: 'visible' }),
     ]);
   }
 
@@ -134,7 +134,7 @@ export class FormPage {
       await this.jsClick(this.step2.locator(`input[value="${value}"]`));
     }
     await this.step2NextBtn.click();
-    await this.step3.waitFor({ state: 'visible', timeout: 10_000 });
+    await this.step3.waitFor({ state: 'visible' });
   }
 
   /**
@@ -144,7 +144,7 @@ export class FormPage {
   async selectPropertyType(value: string): Promise<void> {
     await this.jsClick(this.step3.locator(`input[value="${value}"]`));
     await this.step3NextBtn.click();
-    await this.step4.waitFor({ state: 'visible', timeout: 10_000 });
+    await this.step4.waitFor({ state: 'visible' });
   }
 
   /**
@@ -155,7 +155,7 @@ export class FormPage {
     await this.nameInput.fill(name);
     await this.emailInput.fill(email);
     await this.estimateBtn.click();
-    await this.step5.waitFor({ state: 'visible', timeout: 10_000 });
+    await this.step5.waitFor({ state: 'visible' });
   }
 
   /** Step 5: fill phone number and click Submit. */

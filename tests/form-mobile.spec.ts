@@ -1,4 +1,5 @@
-import { test, expect } from './fixtures';
+import { type Page } from '@playwright/test';
+import { test as formTest, expect } from './fixtures';
 
 // ---------------------------------------------------------------------------
 // Mobile layout tests — iPhone 14 Pro Max (430 × 932)
@@ -6,208 +7,171 @@ import { test, expect } from './fixtures';
 // ❌ DEFECT: At 430 px viewport width, form elements overlap or get clipped.
 // ❌ DEFECT: "Estimate Your Cost" CTA button is unresponsive on mobile.
 //
-// These tests are run only on the mobile-chrome project defined in
-// playwright.config.ts and are skipped on desktop automatically via the
-// project filter in that config.
-//
-// Each test targets a specific step so failures are easy to localise.
+// Run only on the mobile-chrome project (playwright.config.ts).
+// Nested describe + beforeEach eliminates repeated step-navigation setup.
 // ---------------------------------------------------------------------------
 
-test.describe('Mobile layout — form fits within 430 px viewport', () => {
+/** Assert no horizontal scrollbar / clipped content. */
+async function assertNoOverflow(page: Page, label: string): Promise<void> {
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > window.innerWidth,
+  );
+  expect(overflow, `Page has horizontal overflow on ${label}`).toBe(false);
+}
 
-  // ── Helper ──────────────────────────────────────────────────────────────
-  /**
-   * Assert that no element inside the form overflows the viewport horizontally.
-   * A scrollWidth > innerWidth means content is clipped or forces a scrollbar.
-   */
-  async function assertNoHorizontalOverflow(form: Awaited<ReturnType<typeof import('./fixtures')['test']['extend']>> extends never ? never : InstanceType<typeof import('./pages/FormPage')['FormPage']>, page: import('@playwright/test').Page) {
-    const overflow = await page.evaluate(() =>
-      document.documentElement.scrollWidth > window.innerWidth,
-    );
-    expect(overflow, 'Page has horizontal overflow — content is clipped').toBe(false);
-  }
+formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
 
-  // ── CTA button: "Estimate Your Cost" ─────────────────────────────────────
-  // ❌ DEFECT: button is unresponsive on mobile — clicking it does not scroll
-  //    to or activate the form, so mobile visitors cannot enter the funnel.
-  test('"Estimate Your Cost" CTA button activates the form on mobile [DEFECT]', async ({ page }) => {
-    // The fixture already navigated to '/'. Look for the body CTA button
-    // (outside the form containers — it appears in the reviews / cost section).
-    const ctaBtn = page.locator('a, button').filter({ hasText: /estimate your cost/i }).first();
+  // ── CTA button ─────────────────────────────────────────────────────────────
+  // ❌ DEFECT: unresponsive — clicking does not scroll/activate the form.
+  formTest('"Estimate Your Cost" CTA button activates the form on mobile [DEFECT]', async ({ page }) => {
+    const ctaBtn  = page.locator('a, button').filter({ hasText: /estimate your cost/i }).first();
+    const zipInput = page.locator('[data-zip-code-input]').first();
 
-    await expect(ctaBtn, '"Estimate Your Cost" button not found on page').toBeVisible({ timeout: 10_000 });
-
+    await expect(ctaBtn, '"Estimate Your Cost" button not found').toBeVisible();
     await ctaBtn.click();
 
-    // After clicking, the ZIP input (step 1) should become visible / in-viewport,
-    // indicating the page scrolled to or revealed the form.
-    // Expected: step 1 ZIP input is visible.
-    // Actual (defect): nothing happens — the ZIP input is never scrolled into view.
-    const zipInput = page.locator('[data-zip-code-input]').first();
-    await expect(zipInput, 'ZIP input not visible after clicking CTA — button is unresponsive').toBeInViewport({ timeout: 5_000 });
+    // Expected: ZIP input scrolls into view. Actual (defect): nothing happens.
+    await expect(zipInput, 'ZIP input not in viewport after CTA click — button is unresponsive').toBeInViewport();
   });
 
-  // ── Step 1: ZIP input and Next button ────────────────────────────────────
-  test('step 1: ZIP input and Next button are fully visible', async ({ form, page }) => {
-    const zipBox  = await form.zipInput.boundingBox();
-    const btnBox  = await form.step1NextBtn.boundingBox();
-    const vw      = page.viewportSize()!.width;
+  // ── Show more / Show less toggle ────────────────────────────────────────────
+  formTest('"Show more" expands reviews and "Show less" collapses them', async ({ page }) => {
+    const showMoreBtn = page.locator('a.moreless').first();
+    const btnText     = showMoreBtn.locator('span.moreless__txt');
+    const reviewFull  = page.locator('.reviewFull').first();
+    const reviewWrap  = page.locator('.reviewWrap').first();
+
+    await showMoreBtn.scrollIntoViewIfNeeded();
+    await expect(showMoreBtn).toBeVisible();
+
+    // Initial state
+    await expect(btnText).toHaveText(/show more/i);
+    await expect(reviewWrap).not.toHaveClass(/reviewWrap_opened/);
+    await expect(reviewFull).toBeHidden();
+
+    // Expand
+    await showMoreBtn.click();
+    await expect(btnText).toHaveText(/show less/i);
+    await expect(reviewWrap).toHaveClass(/reviewWrap_opened/);
+    await expect(reviewFull).toBeVisible();
+
+    // Collapse
+    await showMoreBtn.click();
+    await expect(btnText).toHaveText(/show more/i);
+    await expect(reviewWrap).not.toHaveClass(/reviewWrap_opened/);
+    await expect(reviewFull).toBeHidden();
+  });
+
+  // ── Step 1 ─────────────────────────────────────────────────────────────────
+  formTest('step 1: ZIP input and Next button are fully visible', async ({ form, page }) => {
+    const vw     = page.viewportSize()!.width;
+    const zipBox = await form.zipInput.boundingBox();
+    const btnBox = await form.step1NextBtn.boundingBox();
 
     expect(zipBox, 'ZIP input not found').not.toBeNull();
     expect(btnBox, 'Next button not found').not.toBeNull();
 
-    // Neither element should extend beyond the right edge of the viewport
     expect(zipBox!.x + zipBox!.width).toBeLessThanOrEqual(vw);
     expect(btnBox!.x + btnBox!.width).toBeLessThanOrEqual(vw);
-
-    // Both should have positive height (not collapsed / zero-height)
     expect(zipBox!.height).toBeGreaterThan(0);
     expect(btnBox!.height).toBeGreaterThan(0);
 
-    // No horizontal overflow on the page
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth,
-    );
-    expect(overflow, 'Page has horizontal overflow on step 1').toBe(false);
+    await assertNoOverflow(page, 'step 1');
   });
 
-  // ── Step 2: Interest cards ────────────────────────────────────────────────
-  test('step 2: interest option cards do not overflow viewport', async ({ form, page }) => {
-    await form.fillZip('68901');
-    await form.waitForZipResult();
-    await expect(form.step2).toBeVisible();
+  // ── Steps 2–5: share ZIP setup via beforeEach ──────────────────────────────
+  formTest.describe('step 2+: valid ZIP pre-filled', () => {
 
-    const vw = page.viewportSize()!.width;
+    formTest.beforeEach(async ({ form }) => {
+      await form.fillZip('68901');
+      await form.waitForZipResult();
+      await expect(form.step2).toBeVisible();
+    });
 
-    // Check each interest checkbox label fits within the viewport
-    const checkboxes = form.interestCheckboxes;
-    const count = await checkboxes.count();
+    formTest('step 2: interest option cards do not overflow viewport', async ({ form, page }) => {
+      const vw       = page.viewportSize()!.width;
+      const checkboxes = form.interestCheckboxes;
+      const count    = await checkboxes.count();
 
-    for (let i = 0; i < count; i++) {
-      const id    = await checkboxes.nth(i).getAttribute('id');
-      const label = page.locator(`label[for="${id}"]`);
-      const box   = await label.boundingBox();
-
-      if (box) {
-        expect(
-          box.x + box.width,
-          `Interest card "${id}" overflows viewport`,
-        ).toBeLessThanOrEqual(vw + 1); // +1 px tolerance for sub-pixel rendering
+      for (let i = 0; i < count; i++) {
+        const id    = await checkboxes.nth(i).getAttribute('id');
+        const label = page.locator(`label[for="${id}"]`);
+        const box   = await label.boundingBox();
+        if (box) {
+          expect(box.x + box.width, `Interest card "${id}" overflows viewport`).toBeLessThanOrEqual(vw + 1);
+        }
       }
-    }
 
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth,
-    );
-    expect(overflow, 'Page has horizontal overflow on step 2').toBe(false);
-  });
+      await assertNoOverflow(page, 'step 2');
+    });
 
-  // ── Step 3: Property type cards ───────────────────────────────────────────
-  test('step 3: property type cards do not overflow viewport', async ({ form, page }) => {
-    await form.fillZip('68901');
-    await form.waitForZipResult();
-    await form.selectInterests(['Safety']);
-    await expect(form.step3).toBeVisible();
+    // ── Steps 3–5: share interests setup ──────────────────────────────────────
+    formTest.describe('step 3+: interests selected', () => {
 
-    const vw    = page.viewportSize()!.width;
-    const radios = form.propertyRadios;
-    const count  = await radios.count();
+      formTest.beforeEach(async ({ form }) => {
+        await form.selectInterests(['Safety']);
+      });
 
-    for (let i = 0; i < count; i++) {
-      const id    = await radios.nth(i).getAttribute('id');
-      const label = page.locator(`label[for="${id}"]`);
-      const box   = await label.boundingBox();
+      formTest('step 3: property type cards do not overflow viewport', async ({ form, page }) => {
+        const vw    = page.viewportSize()!.width;
+        const radios = form.propertyRadios;
+        const count  = await radios.count();
 
-      if (box) {
-        expect(
-          box.x + box.width,
-          `Property card "${id}" overflows viewport`,
-        ).toBeLessThanOrEqual(vw + 1);
-      }
-    }
+        for (let i = 0; i < count; i++) {
+          const id    = await radios.nth(i).getAttribute('id');
+          const label = page.locator(`label[for="${id}"]`);
+          const box   = await label.boundingBox();
+          if (box) {
+            expect(box.x + box.width, `Property card "${id}" overflows viewport`).toBeLessThanOrEqual(vw + 1);
+          }
+        }
 
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth,
-    );
-    expect(overflow, 'Page has horizontal overflow on step 3').toBe(false);
-  });
+        await assertNoOverflow(page, 'step 3');
+      });
 
-  // ── Step 4: Name / Email inputs ───────────────────────────────────────────
-  test('step 4: Name and Email inputs do not overflow viewport', async ({ form, page }) => {
-    await form.fillZip('68901');
-    await form.waitForZipResult();
-    await form.selectInterests(['Safety']);
-    await form.selectPropertyType('Owned House / Condo');
-    await expect(form.step4).toBeVisible();
+      // ── Steps 4–5: share property type setup ──────────────────────────────────
+      formTest.describe('step 4+: property type selected', () => {
 
-    const vw      = page.viewportSize()!.width;
-    const nameBox = await form.nameInput.boundingBox();
-    const mailBox = await form.emailInput.boundingBox();
+        formTest.beforeEach(async ({ form }) => {
+          await form.selectPropertyType('Owned House / Condo');
+        });
 
-    expect(nameBox, 'Name input not found').not.toBeNull();
-    expect(mailBox, 'Email input not found').not.toBeNull();
+        formTest('step 4: Name and Email inputs do not overflow viewport', async ({ form, page }) => {
+          const vw      = page.viewportSize()!.width;
+          const nameBox = await form.nameInput.boundingBox();
+          const mailBox = await form.emailInput.boundingBox();
 
-    expect(nameBox!.x + nameBox!.width).toBeLessThanOrEqual(vw + 1);
-    expect(mailBox!.x + mailBox!.width).toBeLessThanOrEqual(vw + 1);
+          expect(nameBox, 'Name input not found').not.toBeNull();
+          expect(mailBox, 'Email input not found').not.toBeNull();
 
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth,
-    );
-    expect(overflow, 'Page has horizontal overflow on step 4').toBe(false);
-  });
+          expect(nameBox!.x + nameBox!.width).toBeLessThanOrEqual(vw + 1);
+          expect(mailBox!.x + mailBox!.width).toBeLessThanOrEqual(vw + 1);
 
-  // ── Reviews "Show more / Show less" toggle ────────────────────────────────
-  test('"Show more" expands reviews and "Show less" collapses them', async ({ form, page }) => {
-    const showMoreBtn   = page.locator('a.moreless').first();
-    const btnText       = showMoreBtn.locator('span.moreless__txt');
-    const reviewFull    = page.locator('.reviewFull').first();
-    const reviewWrap    = page.locator('.reviewWrap').first();
+          await assertNoOverflow(page, 'step 4');
+        });
 
-    // Scroll the button into view on mobile
-    await showMoreBtn.scrollIntoViewIfNeeded();
-    await expect(showMoreBtn).toBeVisible();
+        // ── Step 5: share contact info setup ────────────────────────────────────
+        formTest.describe('step 5: contact info filled', () => {
 
-    // ── Initial state ────────────────────────────────────────────────────────
-    await expect(btnText).toHaveText(/show more/i);
-    await expect(reviewWrap).not.toHaveClass(/reviewWrap_opened/);
-    // reviewFull is hidden initially (slideToggle starts collapsed)
-    await expect(reviewFull).toBeHidden();
+          formTest.beforeEach(async ({ form }) => {
+            await form.fillContactInfo('John Doe', 'john@example.com');
+          });
 
-    // ── Expand ───────────────────────────────────────────────────────────────
-    await showMoreBtn.click();
-    await expect(btnText).toHaveText(/show less/i, { timeout: 5_000 });
-    await expect(reviewWrap).toHaveClass(/reviewWrap_opened/);
-    await expect(reviewFull).toBeVisible({ timeout: 5_000 });
+          formTest('step 5: Phone input and Submit button do not overflow viewport', async ({ form, page }) => {
+            const vw       = page.viewportSize()!.width;
+            const phoneBox = await form.phoneInput.boundingBox();
+            const btnBox   = await form.submitBtn.boundingBox();
 
-    // ── Collapse ─────────────────────────────────────────────────────────────
-    await showMoreBtn.click();
-    await expect(btnText).toHaveText(/show more/i, { timeout: 5_000 });
-    await expect(reviewWrap).not.toHaveClass(/reviewWrap_opened/);
-    await expect(reviewFull).toBeHidden({ timeout: 5_000 });
-  });
+            expect(phoneBox, 'Phone input not found').not.toBeNull();
+            expect(btnBox,   'Submit button not found').not.toBeNull();
 
-  // ── Step 5: Phone input and Submit button ─────────────────────────────────
-  test('step 5: Phone input and Submit button do not overflow viewport', async ({ form, page }) => {
-    await form.fillZip('68901');
-    await form.waitForZipResult();
-    await form.selectInterests(['Safety']);
-    await form.selectPropertyType('Owned House / Condo');
-    await form.fillContactInfo('John Doe', 'john@example.com');
-    await expect(form.step5).toBeVisible();
+            expect(phoneBox!.x + phoneBox!.width).toBeLessThanOrEqual(vw + 1);
+            expect(btnBox!.x  + btnBox!.width).toBeLessThanOrEqual(vw + 1);
 
-    const vw      = page.viewportSize()!.width;
-    const phoneBox = await form.phoneInput.boundingBox();
-    const btnBox   = await form.submitBtn.boundingBox();
-
-    expect(phoneBox, 'Phone input not found').not.toBeNull();
-    expect(btnBox,   'Submit button not found').not.toBeNull();
-
-    expect(phoneBox!.x + phoneBox!.width).toBeLessThanOrEqual(vw + 1);
-    expect(btnBox!.x  + btnBox!.width).toBeLessThanOrEqual(vw + 1);
-
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth,
-    );
-    expect(overflow, 'Page has horizontal overflow on step 5').toBe(false);
+            await assertNoOverflow(page, 'step 5');
+          });
+        });
+      });
+    });
   });
 });

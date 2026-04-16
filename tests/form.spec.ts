@@ -34,7 +34,7 @@ test.describe('From home page', () => {
     });
 
     await test.step('verify Thank You page', async () => {
-      await expect(page).toHaveURL(/\/thankyou/, { timeout: 15_000 });
+      await expect(page).toHaveURL(/\/thankyou/);
       await expect(page.locator('h1, h2').filter({ hasText: /thank you/i })).toBeVisible();
     });
   });
@@ -209,7 +209,7 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
 
     // Expected: form stays on step 3 and shows an error.
     // Actual (defect): step 4 appears — the disqualification is not enforced.
-    await expect(form.step4).not.toBeVisible({ timeout: 3_000 });
+    await expect(form.step4).not.toBeVisible();
   });
 });
 
@@ -249,22 +249,22 @@ test.describe('Progress counter', () => {
     await test.step('step 1 done → counter shows 2', async () => {
       await form.fillZip('68901');
       await form.waitForZipResult();
-      await expect(form.stepCurrentIndicator).toHaveText('2', { timeout: 8_000 });
+      await expect(form.stepCurrentIndicator).toHaveText('2');
     });
 
     await test.step('step 2 done → counter shows 3', async () => {
       await form.selectInterests(['Safety']);
-      await expect(form.stepCurrentIndicator).toHaveText('3', { timeout: 8_000 }); // ❌ BUG: counter stays on 2
+      await expect(form.stepCurrentIndicator).toHaveText('3'); // ❌ BUG: counter stays on 2
     });
 
     await test.step('step 3 done → counter shows 4', async () => {
       await form.selectPropertyType('Owned House / Condo');
-      await expect(form.stepCurrentIndicator).toHaveText('4', { timeout: 8_000 });
+      await expect(form.stepCurrentIndicator).toHaveText('4');
     });
 
     await test.step('step 4 done → counter shows 5', async () => {
       await form.fillContactInfo('John Doe', 'john@example.com');
-      await expect(form.stepCurrentIndicator).toHaveText('5', { timeout: 8_000 });
+      await expect(form.stepCurrentIndicator).toHaveText('5');
     });
   });
 });
