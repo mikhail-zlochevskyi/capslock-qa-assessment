@@ -1,6 +1,5 @@
 import { type Page } from '@playwright/test';
 import { test as formTest, expect } from './fixtures';
-import { ZIP, FORM } from './testData';
 
 // ---------------------------------------------------------------------------
 // Mobile layout tests — iPhone 14 Pro Max (430 × 932)
@@ -83,8 +82,8 @@ formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
   // ── Steps 2–5: share ZIP setup via beforeEach ──────────────────────────────
   formTest.describe('step 2+: valid ZIP pre-filled', () => {
 
-    formTest.beforeEach(async ({ form }) => {
-      await form.fillZip(ZIP.serviceAvailable);
+    formTest.beforeEach(async ({ form, testData }) => {
+      await form.fillZip(testData.zip.serviceAvailable);
       await form.waitForZipResult();
       await expect(form.step2).toBeVisible();
     });
@@ -109,8 +108,8 @@ formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
     // ── Steps 3–5: share interests setup ──────────────────────────────────────
     formTest.describe('step 3+: interests selected', () => {
 
-      formTest.beforeEach(async ({ form }) => {
-        await form.selectInterests(FORM.interests);
+      formTest.beforeEach(async ({ form, testData }) => {
+        await form.selectInterests(testData.form.interests);
       });
 
       formTest('step 3: property type cards do not overflow viewport', async ({ form, page }) => {
@@ -133,8 +132,8 @@ formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
       // ── Steps 4–5: share property type setup ──────────────────────────────────
       formTest.describe('step 4+: property type selected', () => {
 
-        formTest.beforeEach(async ({ form }) => {
-          await form.selectPropertyType(FORM.propertyType);
+        formTest.beforeEach(async ({ form, testData }) => {
+          await form.selectPropertyType(testData.form.propertyType);
         });
 
         formTest('step 4: Name and Email inputs do not overflow viewport', async ({ form, page }) => {
@@ -154,8 +153,8 @@ formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
         // ── Step 5: share contact info setup ────────────────────────────────────
         formTest.describe('step 5: contact info filled', () => {
 
-          formTest.beforeEach(async ({ form }) => {
-            await form.fillContactInfo(FORM.name, FORM.email);
+          formTest.beforeEach(async ({ form, testData }) => {
+            await form.fillContactInfo(testData.form.name, testData.form.email);
           });
 
           formTest('step 5: Phone input and Submit button do not overflow viewport', async ({ form, page }) => {

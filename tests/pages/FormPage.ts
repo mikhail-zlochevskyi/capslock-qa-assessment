@@ -1,5 +1,14 @@
 import { type Page, type Locator } from '@playwright/test';
 
+export type FullFormData = {
+  zip: string;
+  interests: string[];
+  propertyType: string;
+  name: string;
+  email: string;
+  phone: string;
+};
+
 /**
  * Page Object for the Walk-In Bath multi-step form at test-qa.capslock.global
  *
@@ -164,25 +173,8 @@ export class FormPage {
     await this.submitBtn.click();
   }
 
-  /**
-   * Convenience method: complete the full happy-path form in one call.
-   * Defaults match a service-available ZIP (68901) and owned property.
-   */
-  async completeFullForm({
-    zip          = '68901',
-    interests    = ['Safety'],
-    propertyType = 'Owned House / Condo',
-    name         = 'John Doe',
-    email        = 'john.doe@example.com',
-    phone        = '8005551234',
-  }: Partial<{
-    zip: string;
-    interests: string[];
-    propertyType: string;
-    name: string;
-    email: string;
-    phone: string;
-  }> = {}): Promise<void> {
+  /** Convenience method: complete the full happy-path form in one call. */
+  async completeFullForm({ zip, interests, propertyType, name, email, phone }: FullFormData): Promise<void> {
     await this.fillZip(zip);
     await this.waitForZipResult();
     await this.selectInterests(interests);
