@@ -2,25 +2,14 @@ import { expect } from '@playwright/test';
 import { test } from './fixtures';
 
 // ---------------------------------------------------------------------------
-// TEST SUITE — Walk-In Bath multi-step form
-//
-// The `form` fixture (defined in fixtures.ts) creates a FormPage instance and
-// navigates to the home page before each test.
-//
-// Tests are organised into describe blocks by entry point:
-//   • "From home page"  — tests that start at step 1
-//   • "From step 2"     — tests that share a beforeEach that fills a valid ZIP
-//   • "Progress indicator" — UX regression for the step counter
-//
-// Tests labelled [DEFECT] document EXPECTED behaviour that the application
-// currently does not implement. They intentionally fail and serve as living
-// bug reports.
+// Tests labelled [DEFECT] document EXPECTED behaviour the application does not
+// yet implement. They intentionally fail and serve as living bug reports.
 // ---------------------------------------------------------------------------
 
 // ── Group 1: Tests starting from the home page ────────────────────────────
 test.describe('From home page', () => {
 
-  // ── 1. Happy path ────────────────────────────────────────────────────────
+  // ── Happy path ───────────────────────────────────────────────────────────
   test('happy path: valid submission redirects to Thank You page', async ({ form, page, testData }) => {
     await test.step('complete all 5 steps', async () => {
       await form.completeFullForm(testData.happyPath);
@@ -32,7 +21,7 @@ test.describe('From home page', () => {
     });
   });
 
-  // ── 2. Out-of-area ZIP ───────────────────────────────────────────────────
+  // ── Out-of-area ZIP ──────────────────────────────────────────────────────
   test('out-of-area ZIP shows unavailability message', async ({ form, testData }) => {
     await form.fillZip(testData.zip.outOfArea);
     await form.waitForZipResult();
@@ -42,7 +31,6 @@ test.describe('From home page', () => {
     await expect(form.step2).not.toBeVisible();
   });
 
-  // ── 2b. Out-of-area ZIP — progress indicator ─────────────────────────────
   // ❌ DEFECT: progress counter renders "1 of null" on the sorry screen —
   //    the total step count is undefined in the out-of-area flow.
   test('out-of-area ZIP: progress indicator shows valid step count [DEFECT]', async ({ form, page, testData }) => {
@@ -63,7 +51,7 @@ test.describe('From home page', () => {
     expect(progressText ?? '', 'Progress current step is null/empty').toMatch(/^\d+$/);
   });
 
-  // ── 3. ZIP format validation ─────────────────────────────────────────────
+  // ── ZIP format validation ────────────────────────────────────────────────
   test.describe('ZIP code format validation', () => {
 
     test('too short (4 digits): stays on step 1', async ({ form }) => {
@@ -101,7 +89,7 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
     await expect(form.step2).toBeVisible();
   });
 
-  // ── 4. Required fields ───────────────────────────────────────────────────
+  // ── Required fields ──────────────────────────────────────────────────────
   test.describe('Required field validation', () => {
 
     test('step 4: missing name blocks progression', async ({ form, testData }) => {
@@ -138,7 +126,7 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
     });
   });
 
-  // ── 5. Phone digit-count validation ─────────────────────────────────────
+  // ── Phone digit-count validation ─────────────────────────────────────────
   test.describe('Phone number digit-count validation', () => {
 
     test.beforeEach(async ({ form, testData }) => {
@@ -167,7 +155,7 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
     });
   });
 
-  // ── 6. Email format (HTML5 native validation) ────────────────────────────
+  // ── Email format (HTML5 native validation) ───────────────────────────────
   test('email without @ triggers browser validation', async ({ form, testData }) => {
     await form.selectInterests(testData.form.interests);
     await form.selectPropertyType(testData.form.propertyType);
@@ -185,7 +173,7 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
     expect(validationMsg).not.toBe('');
   });
 
-  // ── 8. Property type disqualification ────────────────────────────────────
+  // ── Property type disqualification ───────────────────────────────────────
   // ❌ DEFECT: rental/mobile-home types proceed to step 4 instead of showing
   //    the error declared in data-error-text on the step-3 form element.
   test('Rental Property shows disqualification error [DEFECT]', async ({ form, testData }) => {

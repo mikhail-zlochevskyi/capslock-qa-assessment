@@ -1,5 +1,5 @@
 import { type Page, expect } from '@playwright/test';
-import { test as formTest } from './fixtures';
+import { test } from './fixtures';
 
 // ---------------------------------------------------------------------------
 // Mobile layout tests — iPhone 14 Pro Max (430 × 932)
@@ -19,11 +19,11 @@ async function assertNoOverflow(page: Page, label: string): Promise<void> {
   expect(overflow, `Page has horizontal overflow on ${label}`).toBe(false);
 }
 
-formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
+test.describe('Mobile layout — form fits within 430 px viewport', () => {
 
   // ── CTA button ─────────────────────────────────────────────────────────────
   // ❌ DEFECT: unresponsive — clicking does not scroll/activate the form.
-  formTest('"Estimate Your Cost" CTA button activates the form on mobile [DEFECT]', async ({ form, page }) => {
+  test('"Estimate Your Cost" CTA button activates the form on mobile [DEFECT]', async ({ form, page }) => {
     const ctaBtn  = page.locator('a, button').filter({ hasText: /estimate your cost/i }).first();
     const zipInput = page.locator('[data-zip-code-input]').first();
 
@@ -35,7 +35,7 @@ formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
   });
 
   // ── Show more / Show less toggle ────────────────────────────────────────────
-  formTest('"Show more" expands reviews and "Show less" collapses them', async ({ form, page }) => {
+  test('"Show more" expands reviews and "Show less" collapses them', async ({ form, page }) => {
     const showMoreBtn = page.locator('.moreless').first();
     const btnText     = showMoreBtn.locator('span.moreless__txt');
     const reviewFull  = page.locator('.reviewFull').first();
@@ -63,7 +63,7 @@ formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
   });
 
   // ── Step 1 ─────────────────────────────────────────────────────────────────
-  formTest('step 1: ZIP input and Next button are fully visible', async ({ form, page }) => {
+  test('step 1: ZIP input and Next button are fully visible', async ({ form, page }) => {
     const vw     = page.viewportSize()!.width;
     const zipBox = await form.zipInput.boundingBox();
     const btnBox = await form.step1NextBtn.boundingBox();
@@ -79,16 +79,17 @@ formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
     await assertNoOverflow(page, 'step 1');
   });
 
-  // ── Steps 2–5: share ZIP setup via beforeEach ──────────────────────────────
-  formTest.describe('step 2+: valid ZIP pre-filled', () => {
+  // ── Steps 2–5: each describe adds one more setup step via beforeEach. ────────
+  // By the time a leaf test runs, all outer beforeEach callbacks have executed.
+  test.describe('steps 2–5: service-area ZIP entered', () => {
 
-    formTest.beforeEach(async ({ form, testData }) => {
+    test.beforeEach(async ({ form, testData }) => {
       await form.fillZip(testData.zip.serviceAvailable);
       await form.waitForZipResult();
       await expect(form.step2).toBeVisible();
     });
 
-    formTest('step 2: interest option cards do not overflow viewport', async ({ form, page }) => {
+    test('step 2: interest option cards do not overflow viewport', async ({ form, page }) => {
       const vw       = page.viewportSize()!.width;
       const checkboxes = form.interestCheckboxes;
       const count    = await checkboxes.count();
@@ -105,14 +106,14 @@ formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
       await assertNoOverflow(page, 'step 2');
     });
 
-    // ── Steps 3–5: share interests setup ──────────────────────────────────────
-    formTest.describe('step 3+: interests selected', () => {
+    // ── Steps 3–5: interests already selected via outer beforeEach ───────────
+    test.describe('steps 3–5: interests selected', () => {
 
-      formTest.beforeEach(async ({ form, testData }) => {
+      test.beforeEach(async ({ form, testData }) => {
         await form.selectInterests(testData.form.interests);
       });
 
-      formTest('step 3: property type cards do not overflow viewport', async ({ form, page }) => {
+      test('step 3: property type cards do not overflow viewport', async ({ form, page }) => {
         const vw    = page.viewportSize()!.width;
         const radios = form.propertyRadios;
         const count  = await radios.count();
@@ -129,14 +130,14 @@ formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
         await assertNoOverflow(page, 'step 3');
       });
 
-      // ── Steps 4–5: share property type setup ──────────────────────────────────
-      formTest.describe('step 4+: property type selected', () => {
+      // ── Steps 4–5: property type already selected via outer beforeEach ─────
+      test.describe('steps 4–5: property type selected', () => {
 
-        formTest.beforeEach(async ({ form, testData }) => {
+        test.beforeEach(async ({ form, testData }) => {
           await form.selectPropertyType(testData.form.propertyType);
         });
 
-        formTest('step 4: Name and Email inputs do not overflow viewport', async ({ form, page }) => {
+        test('step 4: Name and Email inputs do not overflow viewport', async ({ form, page }) => {
           const vw      = page.viewportSize()!.width;
           const nameBox = await form.nameInput.boundingBox();
           const mailBox = await form.emailInput.boundingBox();
@@ -150,14 +151,14 @@ formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
           await assertNoOverflow(page, 'step 4');
         });
 
-        // ── Step 5: share contact info setup ────────────────────────────────────
-        formTest.describe('step 5: contact info filled', () => {
+        // ── Step 5: contact info already filled via outer beforeEach ──────────
+        test.describe('step 5: contact info filled', () => {
 
-          formTest.beforeEach(async ({ form, testData }) => {
+          test.beforeEach(async ({ form, testData }) => {
             await form.fillContactInfo(testData.form.name, testData.form.email);
           });
 
-          formTest('step 5: Phone input and Submit button do not overflow viewport', async ({ form, page }) => {
+          test('step 5: Phone input and Submit button do not overflow viewport', async ({ form, page }) => {
             const vw       = page.viewportSize()!.width;
             const phoneBox = await form.phoneInput.boundingBox();
             const btnBox   = await form.submitBtn.boundingBox();
