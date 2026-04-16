@@ -1,17 +1,19 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { FormPage } from './pages/FormPage';
 
 // ---------------------------------------------------------------------------
 // TEST SUITE — Walk-In Bath multi-step form
 //
+// The `form` fixture (defined in fixtures.ts) creates a FormPage instance and
+// navigates to the home page before each test.
+//
 // Tests are organised into describe blocks by entry point:
 //   • "From home page"  — tests that start at step 1
-//   • "From step 2"     — tests that start at the interests step (valid ZIP
-//                         already submitted); share a beforeEach for setup
+//   • "From step 2"     — tests that share a beforeEach that fills a valid ZIP
 //   • "Progress indicator" — UX regression for the step counter
 //
-// Tests named with ❌ DEFECT document EXPECTED behaviour that the application
-// currently does not implement.  They intentionally fail and serve as living
+// Tests labelled [DEFECT] document EXPECTED behaviour that the application
+// currently does not implement. They intentionally fail and serve as living
 // bug reports.
 // ---------------------------------------------------------------------------
 
@@ -19,10 +21,7 @@ import { FormPage } from './pages/FormPage';
 test.describe('From home page', () => {
 
   // ── 1. Happy path ────────────────────────────────────────────────────────
-  test('happy path: valid submission redirects to Thank You page', async ({ page }) => {
-    const form = new FormPage(page);
-    await form.goto();
-
+  test('happy path: valid submission redirects to Thank You page', async ({ form, page }) => {
     await test.step('complete all 5 steps', async () => {
       await form.completeFullForm({
         zip:          '68901',
@@ -41,26 +40,19 @@ test.describe('From home page', () => {
   });
 
   // ── 2. Out-of-area ZIP ───────────────────────────────────────────────────
-  test('out-of-area ZIP (11111) shows unavailability message', async ({ page }) => {
-    const form = new FormPage(page);
-    await form.goto();
-
+  test('out-of-area ZIP (11111) shows unavailability message', async ({ form }) => {
     await form.fillZip('11111');
     await form.waitForZipResult();
 
     await expect(form.stepSorry).toBeVisible();
     await expect(form.stepSorry).toContainText(/sorry/i);
-    // Interests step must NOT have appeared
     await expect(form.step2).not.toBeVisible();
   });
 
   // ── 3. ZIP format validation ─────────────────────────────────────────────
   test.describe('ZIP code format validation', () => {
 
-    test('too short (4 digits): stays on step 1', async ({ page }) => {
-      const form = new FormPage(page);
-      await form.goto();
-
+    test('too short (4 digits): stays on step 1', async ({ form }) => {
       await form.zipInput.fill('1234');
       await form.step1NextBtn.click();
 
@@ -68,10 +60,7 @@ test.describe('From home page', () => {
       await expect(form.zipInput).toBeVisible();
     });
 
-    test('too long (6 digits): stays on step 1', async ({ page }) => {
-      const form = new FormPage(page);
-      await form.goto();
-
+    test('too long (6 digits): stays on step 1', async ({ form }) => {
       await form.zipInput.fill('123456');
       await form.step1NextBtn.click();
 
@@ -79,10 +68,7 @@ test.describe('From home page', () => {
       await expect(form.zipInput).toBeVisible();
     });
 
-    test('non-numeric input: stays on step 1', async ({ page }) => {
-      const form = new FormPage(page);
-      await form.goto();
-
+    test('non-numeric input: stays on step 1', async ({ form }) => {
       await form.zipInput.fill('abcde');
       await form.step1NextBtn.click();
 
@@ -94,33 +80,28 @@ test.describe('From home page', () => {
 
 // ── Group 2: Tests starting at step 2 (valid ZIP already submitted) ───────
 test.describe('From step 2 (service-available ZIP pre-filled)', () => {
-  let form: FormPage;
 
-  test.beforeEach(async ({ page }) => {
-    form = new FormPage(page);
-    await form.goto();
+  test.beforeEach(async ({ form }) => {
     await form.fillZip('68901');
     await form.waitForZipResult();
-    // Confirm we are on step 2 before each test
     await expect(form.step2).toBeVisible();
   });
 
   // ── 4. Required fields ───────────────────────────────────────────────────
   test.describe('Required field validation', () => {
 
-    test('step 4: missing name blocks progression', async ({ page }) => {
+    test('step 4: missing name blocks progression', async ({ form }) => {
       await form.selectInterests(['Safety']);
       await form.selectPropertyType('Owned House / Condo');
 
       await form.emailInput.fill('test@example.com');
       await form.estimateBtn.click();
 
-      // Validate: step 4 stays visible, step 5 does not appear
       await expect(form.nameInput).toBeVisible();
       await expect(form.step5).not.toBeVisible();
     });
 
-    test('step 4: missing email blocks progression', async ({ page }) => {
+    test('step 4: missing email blocks progression', async ({ form }) => {
       await form.selectInterests(['Safety']);
       await form.selectPropertyType('Owned House / Condo');
 
@@ -131,12 +112,11 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
       await expect(form.step5).not.toBeVisible();
     });
 
-    test('step 5: missing phone blocks submission', async ({ page }) => {
+    test('step 5: missing phone blocks submission', async ({ form, page }) => {
       await form.selectInterests(['Safety']);
       await form.selectPropertyType('Owned House / Condo');
       await form.fillContactInfo('John Doe', 'john@example.com');
 
-      // Leave phone empty and submit
       await form.submitBtn.click();
 
       await expect(form.submitBtn).toBeVisible();
@@ -147,13 +127,13 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
   // ── 5. Phone digit-count validation ─────────────────────────────────────
   test.describe('Phone number digit-count validation', () => {
 
-    test.beforeEach(async () => {
+    test.beforeEach(async ({ form }) => {
       await form.selectInterests(['Safety']);
       await form.selectPropertyType('Owned House / Condo');
       await form.fillContactInfo('John Doe', 'john@example.com');
     });
 
-    test('fewer than 10 digits is rejected', async ({ page }) => {
+    test('fewer than 10 digits is rejected', async ({ form, page }) => {
       await form.phoneInput.fill('800555'); // 6 digits
       await form.submitBtn.click();
 
@@ -162,7 +142,7 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
     });
 
     // ❌ DEFECT: form accepts phone numbers longer than 10 digits
-    test('more than 10 digits is rejected [DEFECT]', async ({ page }) => {
+    test('more than 10 digits is rejected [DEFECT]', async ({ form, page }) => {
       await form.phoneInput.fill('80055512341'); // 11 digits
       await form.submitBtn.click();
 
@@ -173,7 +153,7 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
   });
 
   // ── 6. Email format (HTML5 native validation) ────────────────────────────
-  test('email without @ triggers browser validation', async ({ page }) => {
+  test('email without @ triggers browser validation', async ({ form }) => {
     await form.selectInterests(['Safety']);
     await form.selectPropertyType('Owned House / Condo');
 
@@ -181,11 +161,9 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
     await form.emailInput.fill('notanemail');
     await form.estimateBtn.click();
 
-    // HTML5 validation should block the form; email input still visible
     await expect(form.emailInput).toBeVisible();
     await expect(form.step5).not.toBeVisible();
 
-    // Browser surfaces a non-empty validationMessage on the invalid field
     const validationMsg = await form.emailInput.evaluate(
       (el: HTMLInputElement) => el.validationMessage,
     );
@@ -196,7 +174,7 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
   // ❌ DEFECT: rental/mobile-home types proceed to step 4 instead of showing
   //    the error defined in data-error-text on the step-3 form element:
   //    "Unfortunately, we don't install walk-in tubs in rental and mobile homes."
-  test('Rental Property shows disqualification error [DEFECT]', async ({ page }) => {
+  test('Rental Property shows disqualification error [DEFECT]', async ({ form }) => {
     await form.selectInterests(['Safety']);
 
     await form.step3.locator('input[value="Rental Property"]').evaluate(
@@ -214,10 +192,7 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
 test.describe('Progress counter', () => {
 
   // ❌ DEFECT: counter skips step 3 — shows "2 → 2 → 4", never "3"
-  test('advances through all steps [DEFECT on step 3]', async ({ page }) => {
-    const form = new FormPage(page);
-    await form.goto();
-
+  test('advances through all steps [DEFECT on step 3]', async ({ form }) => {
     await test.step('step 1 done → counter shows 2', async () => {
       await form.fillZip('68901');
       await form.waitForZipResult();
