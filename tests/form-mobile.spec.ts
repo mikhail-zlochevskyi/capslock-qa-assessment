@@ -1,5 +1,6 @@
 import { type Page } from '@playwright/test';
 import { test as formTest, expect } from './fixtures';
+import { ZIP, FORM } from './testData';
 
 // ---------------------------------------------------------------------------
 // Mobile layout tests — iPhone 14 Pro Max (430 × 932)
@@ -83,7 +84,7 @@ formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
   formTest.describe('step 2+: valid ZIP pre-filled', () => {
 
     formTest.beforeEach(async ({ form }) => {
-      await form.fillZip('68901');
+      await form.fillZip(ZIP.serviceAvailable);
       await form.waitForZipResult();
       await expect(form.step2).toBeVisible();
     });
@@ -109,7 +110,7 @@ formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
     formTest.describe('step 3+: interests selected', () => {
 
       formTest.beforeEach(async ({ form }) => {
-        await form.selectInterests(['Safety']);
+        await form.selectInterests(FORM.interests);
       });
 
       formTest('step 3: property type cards do not overflow viewport', async ({ form, page }) => {
@@ -133,7 +134,7 @@ formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
       formTest.describe('step 4+: property type selected', () => {
 
         formTest.beforeEach(async ({ form }) => {
-          await form.selectPropertyType('Owned House / Condo');
+          await form.selectPropertyType(FORM.propertyType);
         });
 
         formTest('step 4: Name and Email inputs do not overflow viewport', async ({ form, page }) => {
@@ -154,7 +155,7 @@ formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
         formTest.describe('step 5: contact info filled', () => {
 
           formTest.beforeEach(async ({ form }) => {
-            await form.fillContactInfo('John Doe', 'john@example.com');
+            await form.fillContactInfo(FORM.name, FORM.email);
           });
 
           formTest('step 5: Phone input and Submit button do not overflow viewport', async ({ form, page }) => {

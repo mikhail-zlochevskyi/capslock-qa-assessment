@@ -1,5 +1,6 @@
-import { test, expect } from './fixtures';
-import { FormPage } from './pages/FormPage';
+import { expect } from '@playwright/test';
+import { test } from './fixtures';
+import { ZIP, FORM } from './testData';
 
 // ---------------------------------------------------------------------------
 // TEST SUITE — Walk-In Bath multi-step form
@@ -24,12 +25,12 @@ test.describe('From home page', () => {
   test('happy path: valid submission redirects to Thank You page', async ({ form, page }) => {
     await test.step('complete all 5 steps', async () => {
       await form.completeFullForm({
-        zip:          '68901',
-        interests:    ['Safety'],
-        propertyType: 'Owned House / Condo',
-        name:         'Jane Smith',
-        email:        'jane.smith@example.com',
-        phone:        '8005551234',
+        zip:          ZIP.serviceAvailable,
+        interests:    FORM.interests,
+        propertyType: FORM.propertyType,
+        name:         FORM.name,
+        email:        FORM.email,
+        phone:        FORM.phone.valid,
       });
     });
 
@@ -40,8 +41,8 @@ test.describe('From home page', () => {
   });
 
   // ── 2. Out-of-area ZIP ───────────────────────────────────────────────────
-  test('out-of-area ZIP (11111) shows unavailability message', async ({ form }) => {
-    await form.fillZip('11111');
+  test('out-of-area ZIP shows unavailability message', async ({ form }) => {
+    await form.fillZip(ZIP.outOfArea);
     await form.waitForZipResult();
 
     await expect(form.stepSorry).toBeVisible();
@@ -53,23 +54,19 @@ test.describe('From home page', () => {
   // ❌ DEFECT: progress counter renders "1 of null" on the sorry screen —
   //    the total step count is undefined in the out-of-area flow.
   test('out-of-area ZIP: progress indicator shows valid step count [DEFECT]', async ({ form, page }) => {
-    await form.fillZip('11111');
+    await form.fillZip(ZIP.outOfArea);
     await form.waitForZipResult();
 
     await expect(form.stepSorry).toBeVisible();
 
-    // The total-steps element must exist and contain a real number, not "null"
-    // or an empty string.
     const totalIndicator = page.locator('[data-form-progress-total-steps]').first();
     const totalText = await totalIndicator.textContent();
 
-    // Should be a numeric string (e.g. "1" or "5"), never empty or "null"
     expect(
       totalText,
       `Progress total shows "${totalText}" — expected a numeric value`,
     ).toMatch(/^\d+$/);
 
-    // The combined progress text must not contain the word "null"
     const progressText = await page.locator('[data-form-progress-current-step]').first().textContent();
     expect(progressText ?? '', 'Progress current step is null/empty').toMatch(/^\d+$/);
   });
@@ -107,7 +104,7 @@ test.describe('From home page', () => {
 test.describe('From step 2 (service-available ZIP pre-filled)', () => {
 
   test.beforeEach(async ({ form }) => {
-    await form.fillZip('68901');
+    await form.fillZip(ZIP.serviceAvailable);
     await form.waitForZipResult();
     await expect(form.step2).toBeVisible();
   });
@@ -116,10 +113,10 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
   test.describe('Required field validation', () => {
 
     test('step 4: missing name blocks progression', async ({ form }) => {
-      await form.selectInterests(['Safety']);
-      await form.selectPropertyType('Owned House / Condo');
+      await form.selectInterests(FORM.interests);
+      await form.selectPropertyType(FORM.propertyType);
 
-      await form.emailInput.fill('test@example.com');
+      await form.emailInput.fill(FORM.email);
       await form.estimateBtn.click();
 
       await expect(form.nameInput).toBeVisible();
@@ -127,10 +124,10 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
     });
 
     test('step 4: missing email blocks progression', async ({ form }) => {
-      await form.selectInterests(['Safety']);
-      await form.selectPropertyType('Owned House / Condo');
+      await form.selectInterests(FORM.interests);
+      await form.selectPropertyType(FORM.propertyType);
 
-      await form.nameInput.fill('John Doe');
+      await form.nameInput.fill(FORM.name);
       await form.estimateBtn.click();
 
       await expect(form.emailInput).toBeVisible();
@@ -138,9 +135,9 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
     });
 
     test('step 5: missing phone blocks submission', async ({ form, page }) => {
-      await form.selectInterests(['Safety']);
-      await form.selectPropertyType('Owned House / Condo');
-      await form.fillContactInfo('John Doe', 'john@example.com');
+      await form.selectInterests(FORM.interests);
+      await form.selectPropertyType(FORM.propertyType);
+      await form.fillContactInfo(FORM.name, FORM.email);
 
       await form.submitBtn.click();
 
@@ -153,13 +150,13 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
   test.describe('Phone number digit-count validation', () => {
 
     test.beforeEach(async ({ form }) => {
-      await form.selectInterests(['Safety']);
-      await form.selectPropertyType('Owned House / Condo');
-      await form.fillContactInfo('John Doe', 'john@example.com');
+      await form.selectInterests(FORM.interests);
+      await form.selectPropertyType(FORM.propertyType);
+      await form.fillContactInfo(FORM.name, FORM.email);
     });
 
     test('fewer than 10 digits is rejected', async ({ form, page }) => {
-      await form.phoneInput.fill('800555'); // 6 digits
+      await form.phoneInput.fill(FORM.phone.tooShort);
       await form.submitBtn.click();
 
       await expect(form.submitBtn).toBeVisible();
@@ -168,10 +165,9 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
 
     // ❌ DEFECT: form accepts phone numbers longer than 10 digits
     test('more than 10 digits is rejected [DEFECT]', async ({ form, page }) => {
-      await form.phoneInput.fill('80055512341'); // 11 digits
+      await form.phoneInput.fill(FORM.phone.tooLong);
       await form.submitBtn.click();
 
-      // Should stay on step 5 — but the form navigates to /thankyou (defect)
       await expect(page).not.toHaveURL(/\/thankyou/);
       await expect(form.submitBtn).toBeVisible();
     });
@@ -179,10 +175,10 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
 
   // ── 6. Email format (HTML5 native validation) ────────────────────────────
   test('email without @ triggers browser validation', async ({ form }) => {
-    await form.selectInterests(['Safety']);
-    await form.selectPropertyType('Owned House / Condo');
+    await form.selectInterests(FORM.interests);
+    await form.selectPropertyType(FORM.propertyType);
 
-    await form.nameInput.fill('John Doe');
+    await form.nameInput.fill(FORM.name);
     await form.emailInput.fill('notanemail');
     await form.estimateBtn.click();
 
@@ -200,15 +196,13 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
   //    the error defined in data-error-text on the step-3 form element:
   //    "Unfortunately, we don't install walk-in tubs in rental and mobile homes."
   test('Rental Property shows disqualification error [DEFECT]', async ({ form }) => {
-    await form.selectInterests(['Safety']);
+    await form.selectInterests(FORM.interests);
 
     await form.step3.locator('input[value="Rental Property"]').evaluate(
       (el: HTMLElement) => el.click(),
     );
     await form.step3NextBtn.click();
 
-    // Expected: form stays on step 3 and shows an error.
-    // Actual (defect): step 4 appears — the disqualification is not enforced.
     await expect(form.step4).not.toBeVisible();
   });
 });
@@ -219,22 +213,21 @@ test.describe('Video player play/pause toggle', () => {
   test('clicking play toggles <i> from lavin-play → lavin-pause → lavin-play', async ({ form, page }) => {
     const playBtn = page.locator('button.play').first();
 
-    // Scroll the button into view so it is actionable
     await playBtn.scrollIntoViewIfNeeded();
     await expect(playBtn).toBeVisible();
 
     const icon = playBtn.locator('i').first();
 
-    // ── Initial state: play icon ────────────────────────────────────────────
+    // Initial state: play icon
     await expect(icon).toHaveClass(/lavin-play/);
     await expect(icon).not.toHaveClass(/lavin-pause/);
 
-    // ── Click once → pause icon ─────────────────────────────────────────────
+    // Click once → pause icon
     await playBtn.click();
     await expect(icon).toHaveClass(/lavin-pause/);
     await expect(icon).not.toHaveClass(/lavin-play/);
 
-    // ── Click again → back to play icon ─────────────────────────────────────
+    // Click again → back to play icon
     await playBtn.click();
     await expect(icon).toHaveClass(/lavin-play/);
     await expect(icon).not.toHaveClass(/lavin-pause/);
@@ -247,23 +240,23 @@ test.describe('Progress counter', () => {
   // ❌ DEFECT: counter skips step 3 — shows "2 → 2 → 4", never "3"
   test('advances through all steps [DEFECT on step 3]', async ({ form }) => {
     await test.step('step 1 done → counter shows 2', async () => {
-      await form.fillZip('68901');
+      await form.fillZip(ZIP.serviceAvailable);
       await form.waitForZipResult();
       await expect(form.stepCurrentIndicator).toHaveText('2');
     });
 
     await test.step('step 2 done → counter shows 3', async () => {
-      await form.selectInterests(['Safety']);
+      await form.selectInterests(FORM.interests);
       await expect(form.stepCurrentIndicator).toHaveText('3'); // ❌ BUG: counter stays on 2
     });
 
     await test.step('step 3 done → counter shows 4', async () => {
-      await form.selectPropertyType('Owned House / Condo');
+      await form.selectPropertyType(FORM.propertyType);
       await expect(form.stepCurrentIndicator).toHaveText('4');
     });
 
     await test.step('step 4 done → counter shows 5', async () => {
-      await form.fillContactInfo('John Doe', 'john@example.com');
+      await form.fillContactInfo(FORM.name, FORM.email);
       await expect(form.stepCurrentIndicator).toHaveText('5');
     });
   });
