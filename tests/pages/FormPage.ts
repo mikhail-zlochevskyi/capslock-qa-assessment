@@ -1,4 +1,4 @@
-import { type Page, type Locator, expect } from '@playwright/test';
+import { type Page, type Locator } from '@playwright/test';
 
 /**
  * Page Object for the Walk-In Bath multi-step form at test-qa.capslock.global
@@ -191,10 +191,4 @@ export class FormPage {
     await this.fillPhone(phone);
   }
 
-  // ── Assertions ───────────────────────────────────────────────────────────
-
-  /** Assert the progress counter shows the expected step number (2–5). */
-  async expectStep(n: number): Promise<void> {
-    await expect(this.stepCurrentIndicator).toHaveText(String(n), { timeout: 8_000 });
-  }
 }

@@ -196,22 +196,22 @@ test.describe('Progress counter', () => {
     await test.step('step 1 done → counter shows 2', async () => {
       await form.fillZip('68901');
       await form.waitForZipResult();
-      await form.expectStep(2);
+      await expect(form.stepCurrentIndicator).toHaveText('2', { timeout: 8_000 });
     });
 
     await test.step('step 2 done → counter shows 3', async () => {
       await form.selectInterests(['Safety']);
-      await form.expectStep(3); // ❌ BUG: counter stays on 2
+      await expect(form.stepCurrentIndicator).toHaveText('3', { timeout: 8_000 }); // ❌ BUG: counter stays on 2
     });
 
     await test.step('step 3 done → counter shows 4', async () => {
       await form.selectPropertyType('Owned House / Condo');
-      await form.expectStep(4);
+      await expect(form.stepCurrentIndicator).toHaveText('4', { timeout: 8_000 });
     });
 
     await test.step('step 4 done → counter shows 5', async () => {
       await form.fillContactInfo('John Doe', 'john@example.com');
-      await form.expectStep(5);
+      await expect(form.stepCurrentIndicator).toHaveText('5', { timeout: 8_000 });
     });
   });
 });
