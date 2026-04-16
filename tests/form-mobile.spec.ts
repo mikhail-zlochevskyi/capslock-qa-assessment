@@ -156,6 +156,36 @@ test.describe('Mobile layout — form fits within 430 px viewport', () => {
     expect(overflow, 'Page has horizontal overflow on step 4').toBe(false);
   });
 
+  // ── Reviews "Show more / Show less" toggle ────────────────────────────────
+  test('"Show more" expands reviews and "Show less" collapses them', async ({ form, page }) => {
+    const showMoreBtn   = page.locator('a.moreless').first();
+    const btnText       = showMoreBtn.locator('span.moreless__txt');
+    const reviewFull    = page.locator('.reviewFull').first();
+    const reviewWrap    = page.locator('.reviewWrap').first();
+
+    // Scroll the button into view on mobile
+    await showMoreBtn.scrollIntoViewIfNeeded();
+    await expect(showMoreBtn).toBeVisible();
+
+    // ── Initial state ────────────────────────────────────────────────────────
+    await expect(btnText).toHaveText(/show more/i);
+    await expect(reviewWrap).not.toHaveClass(/reviewWrap_opened/);
+    // reviewFull is hidden initially (slideToggle starts collapsed)
+    await expect(reviewFull).toBeHidden();
+
+    // ── Expand ───────────────────────────────────────────────────────────────
+    await showMoreBtn.click();
+    await expect(btnText).toHaveText(/show less/i, { timeout: 5_000 });
+    await expect(reviewWrap).toHaveClass(/reviewWrap_opened/);
+    await expect(reviewFull).toBeVisible({ timeout: 5_000 });
+
+    // ── Collapse ─────────────────────────────────────────────────────────────
+    await showMoreBtn.click();
+    await expect(btnText).toHaveText(/show more/i, { timeout: 5_000 });
+    await expect(reviewWrap).not.toHaveClass(/reviewWrap_opened/);
+    await expect(reviewFull).toBeHidden({ timeout: 5_000 });
+  });
+
   // ── Step 5: Phone input and Submit button ─────────────────────────────────
   test('step 5: Phone input and Submit button do not overflow viewport', async ({ form, page }) => {
     await form.fillZip('68901');

@@ -61,6 +61,7 @@ Out-of-area ZIP (e.g. 11111) → `.step-sorry` screen.
 | 9 | "Estimate Your Cost" CTA button scrolls to / opens form on mobile | 🔴 Critical | ❌ **Defect** |
 | 10 | Out-of-area ZIP: progress indicator shows valid step count (not null) | 🟡 Medium | ❌ **Defect** |
 | 11 | Video play button toggles `<i>` class lavin-play ↔ lavin-pause | 🟡 Medium | ✅ Pass |
+| 12 | "Show more" expands reviews; "Show less" collapses them (mobile) | 🟡 Medium | ✅ Pass |
 
 ---
 
