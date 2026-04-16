@@ -96,21 +96,21 @@ The callback system needs a valid US phone number. A phone with fewer than 10 di
 
 ## Discovered Defects
 
-### Defect 1 — Progress counter skips step 3 (Test 7)
+### Defect 1 — Progress counter skips step 3 (Scenario 16)
 **Expected:** The "X of 5" counter increments at every step: 1 → 2 → 3 → 4 → 5.  
 **Actual:** The counter goes 2 → 2 (stays on 2 during step 3) → 4. Step 3 is never reflected in the counter.  
 **Severity:** Low/UX — users see confusing progress feedback; the jump from 2 to 4 makes the form look broken.
 
 ---
 
-### Defect 2 — Rental/Mobile Home property type is not rejected (Test 8)
+### Defect 2 — Rental/Mobile Home property type is not rejected (Scenario 17)
 **Expected:** Per `data-error-text` on the form element ("Unfortunately, we don't install walk-in tubs in rental and mobile homes"), selecting "Rental Property" or "Mobile Home" should show an error and block progression to step 4.  
 **Actual:** Selecting "Rental Property" and clicking Next advances to step 4 without any error message.  
 **Severity:** Medium — disqualified leads reach the contact/phone capture steps, wasting sales team time.
 
 ---
 
-### Defect 3 — Phone mask silently drops the leading "1" digit
+### Defect 3 — Phone mask silently drops the leading "1" digit (Scenario 11)
 **Expected:** Typing `1111111111` (10 digits) into the phone field should preserve all 10 digits, resulting in a fully masked value such as `(111) 111-1111`.  
 **Actual:** The phone mask treats the leading `1` as a country-code prefix and silently discards it. Only 9 of the 10 typed digits appear in the field, leaving the number one digit short of the 10-digit minimum. The form then blocks submission (correctly), but the user is given no explanation — they have to figure out that the mask ate their first character.  
 **Severity:** High — any user whose real number starts with `1` (common US toll-free / some area codes) cannot enter their number without discovering this quirk manually.
