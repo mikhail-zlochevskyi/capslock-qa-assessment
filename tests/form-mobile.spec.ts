@@ -1,5 +1,5 @@
-import { type Page } from '@playwright/test';
-import { test as formTest, expect } from './fixtures';
+import { type Page, expect } from '@playwright/test';
+import { test as formTest } from './fixtures';
 
 // ---------------------------------------------------------------------------
 // Mobile layout tests — iPhone 14 Pro Max (430 × 932)
@@ -23,7 +23,7 @@ formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
 
   // ── CTA button ─────────────────────────────────────────────────────────────
   // ❌ DEFECT: unresponsive — clicking does not scroll/activate the form.
-  formTest('"Estimate Your Cost" CTA button activates the form on mobile [DEFECT]', async ({ page }) => {
+  formTest('"Estimate Your Cost" CTA button activates the form on mobile [DEFECT]', async ({ form, page }) => {
     const ctaBtn  = page.locator('a, button').filter({ hasText: /estimate your cost/i }).first();
     const zipInput = page.locator('[data-zip-code-input]').first();
 
@@ -35,8 +35,8 @@ formTest.describe('Mobile layout — form fits within 430 px viewport', () => {
   });
 
   // ── Show more / Show less toggle ────────────────────────────────────────────
-  formTest('"Show more" expands reviews and "Show less" collapses them', async ({ page }) => {
-    const showMoreBtn = page.locator('a.moreless').first();
+  formTest('"Show more" expands reviews and "Show less" collapses them', async ({ form, page }) => {
+    const showMoreBtn = page.locator('.moreless').first();
     const btnText     = showMoreBtn.locator('span.moreless__txt');
     const reviewFull  = page.locator('.reviewFull').first();
     const reviewWrap  = page.locator('.reviewWrap').first();

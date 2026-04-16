@@ -13,8 +13,8 @@ type TestData = {
     email: string;
     phone: {
       valid: string;
+      leadingOne: string;
       tooShort: string;
-      tooLong: string;
     };
   };
   /** Pre-assembled happy-path payload for completeFullForm(). */
@@ -47,9 +47,9 @@ export const test = base.extend<Fixtures>({
       name:         'John Doe',
       email:        'john@example.com',
       phone: {
-        valid:    '8005551234',
-        tooShort: '800555',
-        tooLong:  '80055512341',
+        valid:      '8005551234',
+        leadingOne: '1111111111',
+        tooShort:   '800555',
       },
     };
 
@@ -67,5 +67,3 @@ export const test = base.extend<Fixtures>({
     });
   },
 });
-
-export { expect };

@@ -155,11 +155,14 @@ test.describe('From step 2 (service-available ZIP pre-filled)', () => {
       await expect(page).not.toHaveURL(/\/thankyou/);
     });
 
-    // ❌ DEFECT: the phone mask does not preserve a number when typing starts with 1
-    test('phone input accepts a number that starts with 1 [DEFECT]', async ({ form, testData }) => {
+    // ❌ DEFECT: phone mask silently drops the first digit when it is "1",
+    //    so typing 1111111111 produces only 9 entered digits instead of 10.
+    test('phone mask silently drops leading "1" digit [DEFECT]', async ({ form, testData }) => {
       await form.phoneInput.click();
       await form.phoneInput.pressSequentially(testData.form.phone.leadingOne, { delay: 50 });
 
+      // All 10 typed digits should be preserved in the mask.
+      // Actual (defect): the first "1" is dropped — value is one digit short.
       await expect(form.phoneInput).toHaveValue('(111)111-1111');
     });
   });

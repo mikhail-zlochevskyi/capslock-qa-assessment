@@ -62,7 +62,7 @@ Out-of-area ZIP (e.g. 11111) → `.step-sorry` screen.
 | 8 | Missing Email blocks step 4 progression | 🟠 High | ✅ Pass |
 | 9 | Missing Phone blocks step 5 submission | 🟠 High | ✅ Pass |
 | 10 | Phone < 10 digits is rejected | 🟠 High | ✅ Pass |
-| 11 | Phone input accepts number starting with 1 (country code) | 🟠 High | ❌ **Defect** |
+| 11 | Phone mask silently drops leading "1" digit — typed entry becomes one digit short | 🟠 High | ❌ **Defect** |
 | 12 | Mobile layout — form elements fit within 430 px viewport | 🟠 High | ❌ **Defect** |
 | 13 | Invalid email format triggers HTML5 validation | 🟡 Medium | ✅ Pass |
 | 14 | Video play button toggles `<i>` class lavin-play ↔ lavin-pause | 🟡 Medium | ✅ Pass |
@@ -110,10 +110,10 @@ The callback system needs a valid US phone number. A phone with fewer than 10 di
 
 ---
 
-### Defect 3 — Phone input accepts numbers starting with 1 (country code)
-**Expected:** A US phone number beginning with `1` (e.g. `1111111111`) should be rejected — the leading `1` is the country code, not a valid area code, making the number unroutable by the callback system.  
-**Actual:** The phone mask formats the input as `(111) 111-1111` and allows form submission, sending an invalid number to the sales team.  
-**Severity:** High — leads submitted with a leading-1 phone are uncallable; the callback attempt fails silently.
+### Defect 3 — Phone mask silently drops the leading "1" digit
+**Expected:** Typing `1111111111` (10 digits) into the phone field should preserve all 10 digits, resulting in a fully masked value such as `(111) 111-1111`.  
+**Actual:** The phone mask treats the leading `1` as a country-code prefix and silently discards it. Only 9 of the 10 typed digits appear in the field, leaving the number one digit short of the 10-digit minimum. The form then blocks submission (correctly), but the user is given no explanation — they have to figure out that the mask ate their first character.  
+**Severity:** High — any user whose real number starts with `1` (common US toll-free / some area codes) cannot enter their number without discovering this quirk manually.
 
 ---
 
