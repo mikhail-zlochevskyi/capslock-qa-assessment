@@ -109,10 +109,10 @@ The callback system needs a valid US phone number. A phone with fewer than 10 di
 
 ---
 
-### Defect 6 — Out-of-area ZIP shows broken progress indicator ("1 of null")
-**Expected:** When an out-of-area ZIP (e.g. 11111) is submitted, the progress indicator should either be hidden or display a meaningful value (e.g. "1 of 1" or no counter at all) on the sorry/unavailability screen.  
-**Actual:** The progress bar renders with "1 of" followed by nothing (the total step count is `null`/undefined), producing malformed text and a broken progress bar UI.  
-**Severity:** Medium/UX — the sorry screen is a dead-end for out-of-area users; the broken counter adds visual noise and may undermine trust, but no lead data is lost.
+### Defect 4 — Mobile layout overlap / clipping at 430 px viewport
+**Expected:** At iPhone 14 Pro Max width (430 px), all form elements (inputs, labels, buttons) fit within the viewport without horizontal overflow or clipping.  
+**Actual:** At 430 px, form elements overflow or get clipped — `document.documentElement.scrollWidth` exceeds `window.innerWidth` and/or element bounding boxes extend past the right edge of the viewport.  
+**Severity:** High — the form is unusable on the most common iPhone size, directly blocking lead capture from mobile users.
 
 ---
 
@@ -123,10 +123,10 @@ The callback system needs a valid US phone number. A phone with fewer than 10 di
 
 ---
 
-### Defect 4 — Mobile layout overlap / clipping at 430 px viewport (form-mobile tests)
-**Expected:** At iPhone 14 Pro Max width (430 px), all form elements (inputs, labels, buttons) fit within the viewport without horizontal overflow or clipping.  
-**Actual:** At 430 px, form elements overflow or get clipped — `document.documentElement.scrollWidth` exceeds `window.innerWidth` and/or element bounding boxes extend past the right edge of the viewport.  
-**Severity:** High — the form is unusable on the most common iPhone size, directly blocking lead capture from mobile users.
+### Defect 6 — Out-of-area ZIP shows broken progress indicator ("1 of null")
+**Expected:** When an out-of-area ZIP (e.g. 11111) is submitted, the progress indicator should either be hidden or display a meaningful value (e.g. "1 of 1" or no counter at all) on the sorry/unavailability screen.  
+**Actual:** The progress bar renders with "1 of" followed by nothing (the total step count is `null`/undefined), producing malformed text and a broken progress bar UI.  
+**Severity:** Medium/UX — the sorry screen is a dead-end for out-of-area users; the broken counter adds visual noise and may undermine trust, but no lead data is lost.
 
 ---
 
