@@ -13,7 +13,7 @@ Playwright-based end-to-end tests for the multi-step lead-gen form at [test-qa.c
 npm install
 
 # 2. Install Playwright browsers
-npx playwright install chromium
+npx playwright install chromium webkit
 
 # 3. Run all tests (desktop + mobile, headless)
 npm test
@@ -65,9 +65,9 @@ All settings are defined in `playwright.config.ts`.
 | Project | Device preset | Browser engine | Viewport |
 |---------|---------------|----------------|----------|
 | `chromium` | Desktop Chrome | Chromium | 1280 × 720 |
-| `mobile-chrome` | iPhone 14 Pro Max | Chromium (mobile emulation) | 430 × 932 |
+| `mobile-chrome` | iPhone 14 Pro Max | WebKit | 430 × 932 |
 
-Both projects run on the Chromium engine — `npx playwright install chromium` is the only browser install needed. The mobile project uses Playwright's device emulation (viewport, user agent, touch events), not a separate browser.
+The `chromium` project runs on the Chromium engine. The `mobile-chrome` project uses Playwright's iPhone 14 Pro Max device descriptor, which runs on WebKit (Safari's engine) with mobile viewport, user agent, and touch emulation. Both browsers must be installed: `npx playwright install chromium webkit`.
 
 **Base URL:** `https://test-qa.capslock.global` (overridable via `BASE_URL` env var).
 
@@ -89,51 +89,55 @@ Out-of-area ZIP (e.g. 11111) → `.step-sorry` screen.
 
 ---
 
-## Full List of Scenarios
+## Full List of Scenarios (22 tests)
 
 ### Core form flow
 
-| # | Scenario | Priority | Status |
-|---|----------|----------|--------|
-| 1 | Happy path — valid data → /thankyou redirect | 🔴 Critical | ✅ Pass |
-| 2 | Out-of-area ZIP (11111) shows sorry message | 🔴 Critical | ✅ Pass |
+| # | Scenario | Project | Priority | Status |
+|---|----------|---------|----------|--------|
+| 1 | Happy path — valid data → /thankyou redirect | chromium | 🔴 Critical | ✅ Pass |
+| 2 | Out-of-area ZIP (11111) shows sorry message | chromium | 🔴 Critical | ✅ Pass |
 
 ### Input validation
 
-| # | Scenario | Priority | Status |
-|---|----------|----------|--------|
-| 4 | ZIP too short (4 digits) stays on step 1 | 🟠 High | ✅ Pass |
-| 5 | ZIP too long (6 digits) stays on step 1 | 🟠 High | ✅ Pass |
-| 6 | Non-numeric ZIP stays on step 1 | 🟠 High | ✅ Pass |
-| 7 | Missing Name blocks step 4 progression | 🟠 High | ✅ Pass |
-| 8 | Missing Email blocks step 4 progression | 🟠 High | ✅ Pass |
-| 9 | Missing Phone blocks step 5 submission | 🟠 High | ✅ Pass |
-| 10 | Phone < 10 digits is rejected | 🟠 High | ✅ Pass |
-| 11 | Phone mask silently drops leading "1" digit — typed entry becomes one digit short | 🟠 High | ❌ **Defect** |
-| 13 | Invalid email format triggers HTML5 validation | 🟡 Medium | ✅ Pass |
-| 17 | Rental/Mobile Home shows disqualification error | 🟡 Medium | ❌ **Defect** |
+| # | Scenario | Project | Priority | Status |
+|---|----------|---------|----------|--------|
+| 3 | ZIP too short (4 digits) stays on step 1 | chromium | 🟠 High | ✅ Pass |
+| 4 | ZIP too long (6 digits) stays on step 1 | chromium | 🟠 High | ✅ Pass |
+| 5 | Non-numeric ZIP stays on step 1 | chromium | 🟠 High | ✅ Pass |
+| 6 | Missing Name blocks step 4 progression | chromium | 🟠 High | ✅ Pass |
+| 7 | Missing Email blocks step 4 progression | chromium | 🟠 High | ✅ Pass |
+| 8 | Missing Phone blocks step 5 submission | chromium | 🟠 High | ✅ Pass |
+| 9 | Phone < 10 digits is rejected | chromium | 🟠 High | ✅ Pass |
+| 10 | Phone mask silently drops leading "1" digit — typed entry becomes one digit short | chromium | 🟠 High | ❌ **Defect** |
+| 11 | Invalid email format triggers HTML5 validation | chromium | 🟡 Medium | ✅ Pass |
+| 12 | Rental/Mobile Home shows disqualification error | chromium | 🟡 Medium | ❌ **Defect** |
 
-### Layout issues
+### Mobile layout scenarios
 
-| # | Scenario | Priority | Status |
-|---|----------|----------|--------|
-| 3 | "Estimate Your Cost" CTA button scrolls to / opens form on mobile | 🔴 Critical | ❌ **Defect** |
-| 12 | Mobile layout — form elements fit within 430 px viewport | 🟠 High | ❌ **Defect** |
+| # | Scenario | Project | Priority | Status |
+|---|----------|---------|----------|--------|
+| 13 | "Estimate Your Cost" CTA button scrolls to / opens form on mobile | mobile-chrome | 🔴 Critical | ❌ **Defect** |
+| 14 | "Show more" expands reviews; "Show less" collapses them | mobile-chrome | 🟡 Medium | ✅ Pass |
+| 15 | Step 1: ZIP input and Next button are fully visible | mobile-chrome | 🟠 High | ✅ Pass |
+| 16 | Step 2: interest option cards do not overflow viewport | mobile-chrome | 🟠 High | ✅ Pass |
+| 17 | Step 3: property type cards do not overflow viewport | mobile-chrome | 🟠 High | ✅ Pass |
+| 18 | Step 4: Name and Email inputs do not overflow viewport | mobile-chrome | 🟠 High | ✅ Pass |
+| 19 | Step 5: Phone input and Submit button do not overflow viewport | mobile-chrome | 🟠 High | ✅ Pass |
 
 ### UX / UI components
 
-| # | Scenario | Priority | Status |
-|---|----------|----------|--------|
-| 14 | Video play button toggles `<i>` class lavin-play ↔ lavin-pause | 🟡 Medium | ✅ Pass |
-| 15 | "Show more" expands reviews; "Show less" collapses them (mobile) | 🟡 Medium | ✅ Pass |
-| 16 | Progress counter advances through all 5 steps | 🟡 Medium | ❌ **Defect** |
-| 18 | Out-of-area ZIP: progress indicator shows valid step count (not null) | 🟡 Medium | ❌ **Defect** |
+| # | Scenario | Project | Priority | Status |
+|---|----------|---------|----------|--------|
+| 20 | Video play button toggles `<i>` class lavin-play ↔ lavin-pause | chromium | 🟡 Medium | ✅ Pass |
+| 21 | Progress counter advances through all 5 steps | chromium | 🟡 Medium | ❌ **Defect** |
+| 22 | Out-of-area ZIP: progress indicator shows valid step count (not null) | chromium | 🟡 Medium | ❌ **Defect** |
 
 ---
 
 ## Top 5 Automated Tests — Selection & Rationale
 
-**Selected tests: 1, 2, 3, 4, 5**
+**Selected tests: 1, 2, 3 (a/b/c), 4 (a/b/c), 5**
 
 ### Test 1 — Happy Path (full form → /thankyou redirect)
 The golden path for the entire funnel. If this fails, no lead is being captured. It also exercises every step and verifies the final redirect, making it the highest-value single regression check.
@@ -142,10 +146,18 @@ The golden path for the entire funnel. If this fails, no lead is being captured.
 The form has two completely different flows based on ZIP code. The out-of-area path has its own UI and a separate email-capture step. Without this test, a regression could silently route out-of-area users through the normal funnel.
 
 ### Test 3 (a/b/c) — ZIP code format validation
-ZIP is the very first gate in the funnel. If the format is not enforced (exactly 5 digits, numeric only), invalid data enters the system and corrupts service-area lookups. Three sub-cases cover both sides of the boundary (too short, too long, non-numeric).
+ZIP is the very first gate in the funnel. If the format is not enforced (exactly 5 digits, numeric only), invalid data enters the system and corrupts service-area lookups. Three sub-cases cover both sides of the boundary:
+
+- **3a** — too short (4 digits)
+- **3b** — too long (6 digits)
+- **3c** — non-numeric input
 
 ### Test 4 (a/b/c) — Required fields block progression
-Steps 4 and 5 collect the actual contact data — the whole reason the form exists. If name, email, or phone can be skipped, the company receives uncallable / unemailable leads. These tests verify each field individually.
+Steps 4 and 5 collect the actual contact data — the whole reason the form exists. If name, email, or phone can be skipped, the company receives uncallable / unemailable leads. Three sub-cases verify each field individually:
+
+- **4a** — missing Name blocks step 4
+- **4b** — missing Email blocks step 4
+- **4c** — missing Phone blocks step 5
 
 ### Test 5 — Phone number digit count (< 10 digits rejected)
 The callback system needs a valid US phone number. A phone with fewer than 10 digits is structurally invalid. This test confirms the form enforces the minimum length.
@@ -154,14 +166,14 @@ The callback system needs a valid US phone number. A phone with fewer than 10 di
 
 ## Discovered Defects
 
-### Defect 1 — Progress counter skips step 3 (Scenario 7)
+### Defect 1 — Progress counter skips step 3 (Scenario 21)
 **Expected:** The "X of 5" counter increments at every step: 1 → 2 → 3 → 4 → 5.  
 **Actual:** The counter goes 2 → 2 (stays on 2 during step 3) → 4. Step 3 is never reflected in the counter.  
 **Severity:** Low/UX — users see confusing progress feedback; the jump from 2 to 4 makes the form look broken.
 
 ---
 
-### Defect 2 — Rental/Mobile Home property type is not rejected (Scenario 8)
+### Defect 2 — Rental/Mobile Home property type is not rejected (Scenario 12)
 **Expected:** Per `data-error-text` on the form element ("Unfortunately, we don't install walk-in tubs in rental and mobile homes"), selecting "Rental Property" or "Mobile Home" should show an error and block progression to step 4.  
 **Actual:** Selecting "Rental Property" and clicking Next advances to step 4 without any error message.  
 **Severity:** Medium — disqualified leads reach the contact/phone capture steps, wasting sales team time.
@@ -175,21 +187,21 @@ The callback system needs a valid US phone number. A phone with fewer than 10 di
 
 ---
 
-### Defect 4 — Mobile layout overlap / clipping at 430 px viewport (Scenario 12)
+### Defect 4 — Mobile layout overlap / clipping at 430 px viewport (Scenarios 15–19)
 **Expected:** At iPhone 14 Pro Max width (430 px), all form elements (inputs, labels, buttons) fit within the viewport without horizontal overflow or clipping.  
 **Actual:** At 430 px, form elements overflow or get clipped — `document.documentElement.scrollWidth` exceeds `window.innerWidth` and/or element bounding boxes extend past the right edge of the viewport.  
 **Severity:** High — the form is unusable on the most common iPhone size, directly blocking lead capture from mobile users.
 
 ---
 
-### Defect 5 — "Estimate Your Cost" CTA button is unresponsive on mobile (430 px) (Scenario 3)
+### Defect 5 — "Estimate Your Cost" CTA button is unresponsive on mobile (430 px) (Scenario 13)
 **Expected:** Clicking the "Estimate Your Cost →" button in the page body (below reviews section) should scroll to or activate the multi-step form, allowing mobile users to start filling it.  
 **Actual:** On iPhone 14 Pro Max (430 px viewport), clicking the button produces no visible response — the form does not appear and the page does not scroll.  
 **Severity:** Critical — this is the primary CTA for mobile users coming from organic/ad traffic. If the button is broken, mobile visitors cannot enter the funnel at all, resulting in complete conversion loss on mobile.
 
 ---
 
-### Defect 6 — Out-of-area ZIP shows broken progress indicator ("1 of null") (Scenario 18)
+### Defect 6 — Out-of-area ZIP shows broken progress indicator ("1 of null") (Scenario 22)
 **Expected:** When an out-of-area ZIP (e.g. 11111) is submitted, the progress indicator should either be hidden or display a meaningful value (e.g. "1 of 1" or no counter at all) on the sorry/unavailability screen.  
 **Actual:** The progress bar renders with "1 of" followed by nothing (the total step count is `null`/undefined), producing malformed text and a broken progress bar UI.  
 **Severity:** Medium/UX — the sorry screen is a dead-end for out-of-area users; the broken counter adds visual noise and may undermine trust, but no lead data is lost.
