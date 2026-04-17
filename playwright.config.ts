@@ -20,10 +20,12 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      testMatch: /form-desktop\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'mobile-chrome',
+      testMatch: /form-mobile\.spec\.ts/,
       use: { ...devices['iPhone 14 Pro Max'] },
     },
   ],
